@@ -1,0 +1,33 @@
+# Proje İçeriği
+Bu Turborepo kullanan bir monorepo projesi.
+Her zaman Türkçe yanıt ver.
+Yorum satırları ve açıklama yazılarını her zaman Türkçe yaz.
+
+- Paket Yöneticisi: pnpm
+- Veritabanı: PostgreSQL + Prisma ORM + Docker
+- Prisma Schema: `packages/database/prisma/schema.prisma` (Tüm app'ler bu schema'dan type'ları kullanır)
+- Backend: NodeJs + Express + TypeScript =====> (apps/api)
+- Frontend: NextJs + AppRouter + TypeScript + TailwindCSS + shadcn/ui =====> (apps/web-panel)
+- Landing Page: NextJs + AppRouter + TypeScript + TailwindCss =====> (apps/landing-page)
+- Admin Panel: NextJs + AppRouter + TypeScript + TailwindCSS + shadcn/ui =====> (apps/admin-panel)
+- Mobil: React Native + Expo + TypeScript + NativeWind =====> (apps/mobile-app)
+- Rest API =====> (apps/api/rest-api)
+- JWT authentication =====> (apps/api/jwt-authentication)
+
+# Kod Standartları
+- Her zaman TypeScript kullanılacak.
+- Asla 'any' tipini kullanma.
+- Değişkenler için her zaman `camelCase`, database columns için `snake_case` kullan.
+- Senden UI componenti istediğimde, shadcn/ui ve tailwindcss kullan.
+- Prisma schema dosyası `packages/database/prisma/schema.prisma` konumunda bulunur.
+- schema.prisma dosyasında değişiklik yaparsan, migration ve generate komutlarını çalıştırmamı hatırlat.
+- Prisma'dan üretilen type'lar tüm app'lerde (web-panel, admin-panel, mobile-app) kullanılabilir olmalı.
+- Ben istemeden asla kodumda değişiklik yapma. Dosyalara müdahale etme. Terminal komutlarını çalıştırma. Bana yapılacakları adım adım açıkla. Ben söyledikçe bir sonraki adıma geç. Senden aldığım tavsiyelerle ben kendim yazacağım tüm projeyi.
+- Backend, veritabanı ve monorepo yapısıyla alakalı verdiğin önerilerde neyi neden yaptığımızı da açıkla çünkü ben bir frontend developer'ım ve backend ve veritabanıyla ilgili bilgim çok az.
+- Genel olarak kodları en optimize şekilde yaz.
+
+# Monorepo Kuralları
+- Paylaşılan paketler `packages/` klasöründe bulunur.
+- Uygulamalar `apps/` klasöründe bulunur.
+- Uygulama içinde type'ları tekrar tanımlama. Paylaşılan type'ları kullan.
+- Prisma type'ları `packages/database` paketinden import edilir, her app'te tekrar tanımlanmaz.

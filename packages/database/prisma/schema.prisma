@@ -1,0 +1,376 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum'lar
+enum RoleType {
+  SUPER_ADMIN
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum GenderType {
+  MALE
+  FEMALE
+  OTHER
+  UNSPECIFIED
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum AccountStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+// Tablolar
+model Tenant {
+  id                      Int       @id @default(autoincrement())
+  name                    String
+  slug                    String    @unique
+  phone                   String
+  email                   String
+  billingAddress          String    @map("billing_address")
+  images                  String[]
+  coverImage              String?   @map("cover_image")
+  website                 String?
+  facebook                String?
+  instagram               String?
+  twitter                 String?
+  tiktok                  String?
+  linkedin                String?
+  youtube                 String?
+  currentPlanId           Int?      @map("current_plan_id")
+  subscriptionEndDate     DateTime? @map("subscription_end_date")
+  accountStatus           AccountStatus @default(TRIAL) @map("account_status")
+  maxBranches             Int       @map("max_branches")
+  maxUsersPerBranch       Int       @map("max_users_per_branch")
+  maxAppointmentsPerBranch Int      @map("max_appointments_per_branch")
+  maxPhotosPerBranch      Int       @map("max_photos_per_branch")
+  isSmsEnabled            Boolean   @default(false) @map("is_sms_enabled")
+  isWhatsappEnabled       Boolean   @default(false) @map("is_whatsapp_enabled")
+  createdAt               DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  branches                Branch[]
+  users                   User[]
+  customers               Customer[]
+  serviceCategories       ServiceCategory[]
+  services                Service[]
+  appointments            Appointment[]
+  subscriptionPlan        SubscriptionPlan? @relation(fields: [currentPlanId], references: [id])
+
+  @@map("tenants")
+}
+
+model Branch {
+  id              Int       @id @default(autoincrement())
+  tenantId        Int       @map("tenant_id")
+  name            String
+  isActive        Boolean   @default(true) @map("is_active")
+  phone           String
+  cityId          Int       @map("city_id")
+  districtId      Int       @map("district_id")
+  address         String
+  whatsappNumber  String?   @map("whatsapp_number")
+  images          String[]
+  coverImage      String?   @map("cover_image")
+  latitude        Decimal?  @db.Decimal(10, 8)
+  longitude       Decimal?  @db.Decimal(11, 8)
+  ratingScore     Decimal   @default(0) @map("rating_score") @db.Decimal(3, 2)
+  ratingCount     Int       @default(0) @map("rating_count")
+  reviewCount     Int       @default(0) @map("review_count")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  tenant          Tenant    @relation(fields: [tenantId], references: [id])
+  city            City      @relation(fields: [cityId], references: [id])
+  district        District  @relation(fields: [districtId], references: [id])
+  users           User[]
+  customers       Customer[]
+  appointments    Appointment[]
+  servicesOnBranches ServicesOnBranches[]
+  branchSchedules BranchSchedule[]
+
+  @@map("branches")
+}
+
+model User {
+  id            Int        @id @default(autoincrement())
+  tenantId      Int        @map("tenant_id")
+  branchId      Int?       @map("branch_id")
+  name          String
+  email         String     @unique
+  passwordHash  String     @map("password_hash")
+  phone         String
+  role          RoleType   @default(STAFF)
+  gender        GenderType?
+  title         String
+  avatarUrl     String?    @map("avatar_url")
+  ratingScore   Decimal    @default(0) @map("rating_score") @db.Decimal(3, 2)
+  ratingCount   Int        @default(0) @map("rating_count")
+  commentCount  Int        @default(0) @map("comment_count")
+  bio           String?
+  isActive      Boolean    @default(true) @map("is_active")
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  // Relations
+  tenant        Tenant     @relation(fields: [tenantId], references: [id])
+  branch        Branch?    @relation(fields: [branchId], references: [id])
+  appointments  Appointment[]
+  servicesOnUsers ServicesOnUsers[]
+  userSchedules UserSchedule[]
+
+  @@map("users")
+}
+
+model Customer {
+  id            Int        @id @default(autoincrement())
+  tenantId      Int        @map("tenant_id")
+  homeBranchId  Int        @map("home_branch_id")
+  firstName     String     @map("first_name")
+  lastName      String     @map("last_name")
+  phone         String
+  email         String?
+  gender        GenderType?
+  birthDate     DateTime?  @map("birth_date") @db.Date
+  notes         String?
+  isBanned      Boolean    @default(false) @map("is_banned")
+  reviews       Review[]
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  tenant        Tenant     @relation(fields: [tenantId], references: [id])
+  homeBranch    Branch     @relation(fields: [homeBranchId], references: [id])
+  appointments  Appointment[]
+
+  @@unique([tenantId, phone])
+  @@map("customers")
+}
+
+model ServiceCategory {
+  id            Int        @id @default(autoincrement())
+  tenantId      Int        @map("tenant_id")
+  name          String
+  color         String?
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  // Relations
+  tenant        Tenant     @relation(fields: [tenantId], references: [id])
+  services      Service[]
+
+  @@map("service_categories")
+}
+
+model Service {
+  id            Int        @id @default(autoincrement())
+  tenantId      Int        @map("tenant_id")
+  categoryId    Int        @map("category_id")
+  name          String
+  description   String?
+  images        String[]
+  coverImage    String?    @map("cover_image")
+  durationMin   Int        @map("duration_min")
+  price         Decimal    @db.Decimal(10, 2)
+  isActive      Boolean    @default(true) @map("is_active")
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  // Relations
+  tenant        Tenant     @relation(fields: [tenantId], references: [id])
+  category      ServiceCategory @relation(fields: [categoryId], references: [id])
+  appointments  Appointment[]
+  servicesOnBranches ServicesOnBranches[]
+  servicesOnUsers ServicesOnUsers[]
+
+  @@map("services")
+}
+
+model Appointment {
+  id                  Int              @id @default(autoincrement())
+  tenantId            Int              @map("tenant_id")
+  branchId            Int              @map("branch_id")
+  customerId          Int              @map("customer_id")
+  userId              Int              @map("user_id")
+  serviceId           Int              @map("service_id")
+  startTime           DateTime         @map("start_time")
+  endTime             DateTime         @map("end_time")
+  priceAtBooking      Decimal          @map("price_at_booking") @db.Decimal(10, 2)
+  durationAtBooking   Int              @map("duration_at_booking")
+  status              AppointmentStatus @default(PENDING)
+  paymentStatus       PaymentStatus     @default(UNPAID) @map("payment_status")
+  customerNotes       String?          @map("customer_notes")
+  internalNotes       String?          @map("internal_notes")
+  cancellationReason  String?          @map("cancellation_reason")
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  tenant              Tenant           @relation(fields: [tenantId], references: [id])
+  branch              Branch           @relation(fields: [branchId], references: [id])
+  customer            Customer         @relation(fields: [customerId], references: [id])
+  user                User             @relation(fields: [userId], references: [id])
+  service             Service          @relation(fields: [serviceId], references: [id])
+  review      Review?
+
+  @@map("appointments")
+}
+
+model ServicesOnBranches {
+  branchId      Int      @map("branch_id")
+  serviceId     Int      @map("service_id")
+  customPrice   Decimal? @map("custom_price") @db.Decimal(10, 2)
+  isActive      Boolean  @default(true) @map("is_active")
+
+  // Relations
+  branch        Branch   @relation(fields: [branchId], references: [id])
+  service       Service  @relation(fields: [serviceId], references: [id])
+
+  @@id([branchId, serviceId])
+  @@map("services_on_branches")
+}
+
+model ServicesOnUsers {
+  userId        Int      @map("user_id")
+  serviceId     Int      @map("service_id")
+
+  // Relations
+  user          User     @relation(fields: [userId], references: [id])
+  service       Service  @relation(fields: [serviceId], references: [id])
+
+  @@id([userId, serviceId])
+  @@map("services_on_users")
+}
+
+model BranchSchedule {
+  id            Int        @id @default(autoincrement())
+  branchId      Int        @map("branch_id")
+  day           DayOfWeek
+  startTime     String     @map("start_time")
+  endTime       String     @map("end_time")
+  isClosed      Boolean    @default(false) @map("is_closed")
+
+  // Relations
+  branch        Branch     @relation(fields: [branchId], references: [id])
+
+  @@unique([branchId, day])
+  @@map("branch_schedules")
+}
+
+model UserSchedule {
+  id            Int        @id @default(autoincrement())
+  userId        Int        @map("user_id")
+  day           DayOfWeek
+  startTime     String     @map("start_time")
+  endTime       String     @map("end_time")
+  breakStart    String?    @map("break_start")
+  breakEnd      String?    @map("break_end")
+  isOff          Boolean    @default(false) @map("is_off")
+
+  // Relations
+  user          User       @relation(fields: [userId], references: [id])
+
+  @@unique([userId, day])
+  @@map("user_schedules")
+}
+
+model SubscriptionPlan {
+  id                      Int       @id @default(autoincrement())
+  name                    String
+  description             String?
+  isFeatured              Boolean   @default(false) @map("is_featured")
+  priceMonthly            Decimal   @map("price_monthly") @db.Decimal(10, 2)
+  priceYearly             Decimal   @map("price_yearly") @db.Decimal(10, 2)
+  maxBranches             Int       @default(1) @map("max_branches")
+  maxUsersPerBranch       Int       @default(5) @map("max_users_per_branch")
+  maxAppointmentsPerBranch Int      @default(100) @map("max_appointments_per_branch")
+  maxPhotosPerBranch      Int       @default(5) @map("max_photos_per_branch")
+  isSmsEnabled            Boolean   @default(false) @map("is_sms_enabled")
+  isWhatsappEnabled       Boolean   @default(false) @map("is_whatsapp_enabled")
+  isActive                Boolean   @default(true) @map("is_active")
+  createdAt               DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  tenants                 Tenant[]
+
+  @@map("subscription_plans")
+}
+
+model Review {
+  id            Int      @id @default(autoincrement())
+  appointmentId Int      @unique @map("appointment_id") // Bir randevuya 1 yorum
+  customerId    Int      @map("customer_id")
+
+  // Personel Değerlendirmesi
+  staffRating   Int      @map("staff_rating") // 1-5
+  staffComment  String?  @map("staff_comment")
+  
+  // Şube Değerlendirmesi
+  branchRating  Int      @map("branch_rating") // 1-5
+  branchComment String?  @map("branch_comment")
+  
+  adminResponse String?  @map("admin_response")
+  isApproved    Boolean  @default(true) @map("is_approved")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // İlişkiler
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  customer      Customer    @relation(fields: [customerId], references: [id])
+
+  @@map("reviews")
+}
+
+model City {
+  id            Int        @id
+  name          String
+
+  // Relations
+  branches      Branch[]
+  districts     District[]
+
+  @@map("cities")
+}
+
+model District {
+  id            Int        @id @default(autoincrement())
+  name          String
+  cityId        Int        @map("city_id")
+
+  // Relations
+  city          City       @relation(fields: [cityId], references: [id])
+  branches      Branch[]
+
+  @@map("districts")
+}
