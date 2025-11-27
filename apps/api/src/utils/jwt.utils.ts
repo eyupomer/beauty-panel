@@ -13,6 +13,7 @@ export interface TokenPayload {
   email: string
   role: string
   tenantId?: number
+  branchId?: number
 }
 
 export function generateToken(payload: TokenPayload): string {

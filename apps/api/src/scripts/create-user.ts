@@ -15,12 +15,12 @@ async function createUser() {
     const user = await prisma.user.create({
       data: {
         tenantId: tenantId,
-        name: 'Eyüp Ömer Odabaşı',
-        email: 'odabasieyupomer@gmail.com',
+        name: 'Kuaför Ömer',
+        email: 'kuaforomer@gmail.com',
         passwordHash: hashedPassword,
         phone: '05304021357',
-        title: 'Süper Admin',
-        role: 'OWNER',
+        title: 'Kuaför',
+        role: 'STAFF',
         gender: 'MALE',
       },
     })

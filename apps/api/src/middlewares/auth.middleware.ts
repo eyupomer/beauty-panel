@@ -26,6 +26,10 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 
 export const authorize = (allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
+    console.log('--- AUTHORIZE DEBUG ---');
+    console.log('1. İzin Verilen Roller:', allowedRoles);
+    console.log('2. Kullanıcının Rolü:', req.user?.role);
+    console.log('3. Eşleşme Var mı?:', req.user?.role && allowedRoles.includes(req.user.role));
     if (!req.user) {
       return next(createUnauthorizedError('Bu işlem için giriş yapmanız gerekiyor.'))
     }

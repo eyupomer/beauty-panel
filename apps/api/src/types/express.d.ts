@@ -5,6 +5,7 @@ export interface AuthUser {
     email: string
     role: string
     tenantId?: number
+    branchId?: number
 }
 
 declare global {

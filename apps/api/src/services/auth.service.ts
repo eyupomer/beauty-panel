@@ -45,6 +45,7 @@ export async function login(email: string, password: string) {
       email: user.email,
       role: user.role,
       tenantId: user.tenantId,
+      branchId: user.branchId || undefined,
     })
 
     return {

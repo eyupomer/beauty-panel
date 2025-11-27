@@ -353,7 +353,7 @@ model Review {
 }
 
 model City {
-  id            Int        @id
+  id            Int        @id @default(autoincrement())
   name          String
 
   // Relations
