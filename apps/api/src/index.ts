@@ -1,3 +1,5 @@
+// TODO: Uygulamadaki görselleri Cloudflare R2'ye yükleme entegrasyonu eklenecek.
+
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
