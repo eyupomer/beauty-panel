@@ -161,7 +161,7 @@ model Customer {
   firstName     String     @map("first_name")
   lastName      String     @map("last_name")
   phone         String
-  email         String?
+  email         String
   gender        GenderType?
   birthDate     DateTime?  @map("birth_date") @db.Date
   notes         String?
@@ -176,6 +176,7 @@ model Customer {
   appointments  Appointment[]
 
   @@unique([tenantId, phone])
+  @@unique([tenantId, email])
   @@map("customers")
 }
 
